@@ -6,6 +6,7 @@ import (
 
 	"github.com/aslotsu/monkreflections-form-api/config"
 	"github.com/aslotsu/monkreflections-form-api/handlers"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
