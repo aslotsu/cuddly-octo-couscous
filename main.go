@@ -6,6 +6,8 @@ import (
 
 	"github.com/aslotsu/monkreflections-form-api/config"
 	"github.com/aslotsu/monkreflections-form-api/handlers"
+	"github.com/aslotsu/monkreflections-form-api/middleware"
+	"github.com/aslotsu/monkreflections-form-api/services"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -28,6 +30,12 @@ func main() {
 	db := config.ConnectDBFromURL(databaseURL)
 	defer db.Close()
 
+	// Initialize S3 service
+	s3Service, err := services.NewS3Service()
+	if err != nil {
+		log.Fatalf("Failed to initialize S3 service: %v", err)
+	}
+
 	// Create Gin router
 	router := gin.Default()
 
@@ -36,6 +44,8 @@ func main() {
 
 	// Initialize handlers
 	formHandler := handlers.NewFormHandler(db)
+	blogHandler := handlers.NewBlogHandler(db, s3Service)
+	authMiddleware := middleware.NewAuthMiddleware(db)
 
 	// Register routes
 	api := router.Group("/api")
@@ -47,6 +57,19 @@ func main() {
 			forms.GET("/:id", formHandler.GetFormByID)
 			forms.PUT("/:id", formHandler.UpdateForm)
 			forms.DELETE("/:id", formHandler.DeleteForm)
+		}
+
+		// Blog routes
+		blogs := api.Group("/blogs")
+		{
+			blogs.GET("", blogHandler.GetAllBlogs)
+			blogs.GET("/:id", blogHandler.GetBlogByID)
+
+			// Protected blog routes (require API key)
+			blogs.POST("", authMiddleware.RequireAPIKey(), blogHandler.CreateBlog)
+			blogs.PUT("/:id", authMiddleware.RequireAPIKey(), blogHandler.UpdateBlog)
+			blogs.DELETE("/:id", authMiddleware.RequireAPIKey(), blogHandler.DeleteBlog)
+			blogs.POST("/:id/upload-image", authMiddleware.RequireAPIKey(), blogHandler.UploadBlogImage)
 		}
 	}
 

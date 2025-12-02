@@ -76,8 +76,54 @@ func CreateTables(pool *pgxpool.Pool) {
 		);
 	`
 
+	createBlogsTableSQL := `
+		CREATE TABLE IF NOT EXISTS blogs (
+			id SERIAL PRIMARY KEY,
+			title VARCHAR(255) NOT NULL,
+			content JSONB NOT NULL,
+			author VARCHAR(255),
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+	`
+
+	createBlogImagesTableSQL := `
+		CREATE TABLE IF NOT EXISTS blog_images (
+			id SERIAL PRIMARY KEY,
+			blog_id INTEGER REFERENCES blogs(id) ON DELETE CASCADE,
+			image_key VARCHAR(500) NOT NULL,
+			image_url VARCHAR(1000) NOT NULL,
+			alt_text VARCHAR(500),
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+	`
+
+	createApiKeysTableSQL := `
+		CREATE TABLE IF NOT EXISTS api_keys (
+			id SERIAL PRIMARY KEY,
+			key_hash VARCHAR(255) UNIQUE NOT NULL,
+			name VARCHAR(255),
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+	`
+
 	_, err := pool.Exec(context.Background(), createFormTableSQL)
 	if err != nil {
-		log.Fatalf("Failed to create tables: %v", err)
+		log.Fatalf("Failed to create forms table: %v", err)
+	}
+
+	_, err = pool.Exec(context.Background(), createBlogsTableSQL)
+	if err != nil {
+		log.Fatalf("Failed to create blogs table: %v", err)
+	}
+
+	_, err = pool.Exec(context.Background(), createBlogImagesTableSQL)
+	if err != nil {
+		log.Fatalf("Failed to create blog_images table: %v", err)
+	}
+
+	_, err = pool.Exec(context.Background(), createApiKeysTableSQL)
+	if err != nil {
+		log.Fatalf("Failed to create api_keys table: %v", err)
 	}
 }
