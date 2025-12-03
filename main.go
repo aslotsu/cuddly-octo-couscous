@@ -30,10 +30,14 @@ func main() {
 	db := config.ConnectDBFromURL(databaseURL)
 	defer db.Close()
 
-	// Initialize S3 service
-	s3Service, err := services.NewS3Service()
+	// Initialize S3 service (optional - for blog image uploads)
+	var s3Service *services.S3Service
+	s3Service, err = services.NewS3Service()
 	if err != nil {
-		log.Fatalf("Failed to initialize S3 service: %v", err)
+		log.Printf("Warning: S3 service not initialized (blog image uploads disabled): %v", err)
+		s3Service = nil
+	} else {
+		log.Println("S3 service initialized successfully")
 	}
 
 	// Create Gin router
@@ -46,6 +50,16 @@ func main() {
 	formHandler := handlers.NewFormHandler(db)
 	blogHandler := handlers.NewBlogHandler(db, s3Service)
 	authMiddleware := middleware.NewAuthMiddleware(db)
+
+	// Health check endpoint
+	router.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{
+			"status":  "ok",
+			"service": "monkreflections-form-api",
+			"version": "1.0.0",
+			"s3":      s3Service != nil,
+		})
+	})
 
 	// Register routes
 	api := router.Group("/api")
@@ -73,8 +87,13 @@ func main() {
 		}
 	}
 
-	// Start server
-	if err := router.Run(":8080"); err != nil {
+	// Start server (use Railway's PORT env var if available)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Printf("Starting server on port %s", port)
+	if err := router.Run(":" + port); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}
 }

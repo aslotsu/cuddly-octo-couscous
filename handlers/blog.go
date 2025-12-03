@@ -190,6 +190,14 @@ func (bh *BlogHandler) DeleteBlog(c *gin.Context) {
 
 // UploadBlogImage handles image uploads for a blog
 func (bh *BlogHandler) UploadBlogImage(c *gin.Context) {
+	// Check if S3 service is available
+	if bh.s3Service == nil {
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error": "Image upload service is not available. S3 is not configured.",
+		})
+		return
+	}
+
 	blogID, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid blog ID"})

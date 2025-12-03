@@ -6,7 +6,14 @@ import (
 
 func GetCORSConfig() cors.Config {
 	return cors.Config{
-		AllowOrigins:     []string{"https://monkreflections.com", "http://localhost:3000"},
+		AllowOrigins: []string{
+			"https://monkreflections.com",
+			"https://new.monkreflections.com",
+			"https://forms.monkreflections.com",
+			"https://admin.monkreflections.com",
+			"http://localhost:3000",
+			"http://localhost:5173",
+		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
