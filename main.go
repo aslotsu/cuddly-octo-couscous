@@ -49,6 +49,8 @@ func main() {
 	// Initialize handlers
 	formHandler := handlers.NewFormHandler(db)
 	blogHandler := handlers.NewBlogHandler(db, s3Service)
+	eventHandler := handlers.NewEventHandler(db)
+	bookHandler := handlers.NewBookHandler(db)
 	authMiddleware := middleware.NewAuthMiddleware(db)
 
 	// Health check endpoint
@@ -84,6 +86,30 @@ func main() {
 			blogs.PUT("/:id", authMiddleware.RequireAPIKey(), blogHandler.UpdateBlog)
 			blogs.DELETE("/:id", authMiddleware.RequireAPIKey(), blogHandler.DeleteBlog)
 			blogs.POST("/:id/upload-image", authMiddleware.RequireAPIKey(), blogHandler.UploadBlogImage)
+		}
+
+		// Event routes
+		events := api.Group("/events")
+		{
+			events.GET("", eventHandler.GetAllEvents)
+			events.GET("/:id", eventHandler.GetEventByID)
+
+			// Protected event routes (require API key)
+			events.POST("", authMiddleware.RequireAPIKey(), eventHandler.CreateEvent)
+			events.PUT("/:id", authMiddleware.RequireAPIKey(), eventHandler.UpdateEvent)
+			events.DELETE("/:id", authMiddleware.RequireAPIKey(), eventHandler.DeleteEvent)
+		}
+
+		// Book routes
+		books := api.Group("/books")
+		{
+			books.GET("", bookHandler.GetAllBooks)
+			books.GET("/:id", bookHandler.GetBookByID)
+
+			// Protected book routes (require API key)
+			books.POST("", authMiddleware.RequireAPIKey(), bookHandler.CreateBook)
+			books.PUT("/:id", authMiddleware.RequireAPIKey(), bookHandler.UpdateBook)
+			books.DELETE("/:id", authMiddleware.RequireAPIKey(), bookHandler.DeleteBook)
 		}
 	}
 
