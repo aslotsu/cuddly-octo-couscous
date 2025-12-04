@@ -236,4 +236,13 @@ func CreateTables(pool *pgxpool.Pool) {
 	if err != nil {
 		log.Fatalf("Failed to create comments table: %v", err)
 	}
+
+	// Migration: Add slug column to blogs table if it doesn't exist
+	addSlugColumnSQL := `
+		ALTER TABLE blogs ADD COLUMN IF NOT EXISTS slug VARCHAR(255);
+	`
+	_, err = pool.Exec(context.Background(), addSlugColumnSQL)
+	if err != nil {
+		log.Fatalf("Failed to add slug column to blogs table: %v", err)
+	}
 }

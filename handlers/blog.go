@@ -26,7 +26,7 @@ func NewBlogHandler(db *pgxpool.Pool, s3Service *services.S3Service) *BlogHandle
 
 // GetAllBlogs retrieves all blogs
 func (bh *BlogHandler) GetAllBlogs(c *gin.Context) {
-	rows, err := bh.db.Query(context.Background(), "SELECT id, title, content, author, created_at, updated_at FROM blogs ORDER BY created_at DESC")
+	rows, err := bh.db.Query(context.Background(), "SELECT id, title, slug, content, author, created_at, updated_at FROM blogs ORDER BY created_at DESC")
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch blogs"})
 		return
@@ -36,7 +36,7 @@ func (bh *BlogHandler) GetAllBlogs(c *gin.Context) {
 	var blogs []models.Blog
 	for rows.Next() {
 		var blog models.Blog
-		if err := rows.Scan(&blog.ID, &blog.Title, &blog.Content, &blog.Author, &blog.CreatedAt, &blog.UpdatedAt); err != nil {
+		if err := rows.Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Content, &blog.Author, &blog.CreatedAt, &blog.UpdatedAt); err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to scan blog"})
 			return
 		}
@@ -61,9 +61,9 @@ func (bh *BlogHandler) GetBlogByID(c *gin.Context) {
 	var blog models.Blog
 	err = bh.db.QueryRow(
 		context.Background(),
-		"SELECT id, title, content, author, created_at, updated_at FROM blogs WHERE id = $1",
+		"SELECT id, title, slug, content, author, created_at, updated_at FROM blogs WHERE id = $1",
 		id,
-	).Scan(&blog.ID, &blog.Title, &blog.Content, &blog.Author, &blog.CreatedAt, &blog.UpdatedAt)
+	).Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Content, &blog.Author, &blog.CreatedAt, &blog.UpdatedAt)
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Blog not found"})

@@ -7,6 +7,7 @@ import (
 type Blog struct {
 	ID        int       `json:"id"`
 	Title     string    `json:"title"`
+	Slug      string    `json:"slug,omitempty"`
 	Content   string    `json:"content"` // JSONB content as string
 	Author    string    `json:"author,omitempty"`
 	CreatedAt time.Time `json:"created_at"`
