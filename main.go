@@ -51,6 +51,7 @@ func main() {
 	blogHandler := handlers.NewBlogHandler(db, s3Service)
 	eventHandler := handlers.NewEventHandler(db)
 	bookHandler := handlers.NewBookHandler(db)
+	commentHandler := handlers.NewCommentHandler(db)
 	authMiddleware := middleware.NewAuthMiddleware(db)
 
 	// Health check endpoint
@@ -110,6 +111,22 @@ func main() {
 			books.POST("", authMiddleware.RequireAPIKey(), bookHandler.CreateBook)
 			books.PUT("/:id", authMiddleware.RequireAPIKey(), bookHandler.UpdateBook)
 			books.DELETE("/:id", authMiddleware.RequireAPIKey(), bookHandler.DeleteBook)
+		}
+
+		// Comment routes
+		comments := api.Group("/comments")
+		{
+			// Public routes - get approved comments
+			comments.GET("/blog/:blog_id", commentHandler.GetCommentsByBlogID)
+			comments.GET("/slug/:slug", commentHandler.GetCommentsByBlogSlug)
+
+			// Public route - submit a comment (creates with 'pending' status)
+			comments.POST("", commentHandler.CreateComment)
+
+			// Admin routes (require API key)
+			comments.GET("", authMiddleware.RequireAPIKey(), commentHandler.GetAllComments)
+			comments.PUT("/:id", authMiddleware.RequireAPIKey(), commentHandler.UpdateComment)
+			comments.DELETE("/:id", authMiddleware.RequireAPIKey(), commentHandler.DeleteComment)
 		}
 	}
 

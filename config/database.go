@@ -187,6 +187,21 @@ func CreateTables(pool *pgxpool.Pool) {
 		);
 	`
 
+	createCommentsTableSQL := `
+		CREATE TABLE IF NOT EXISTS comments (
+			id SERIAL PRIMARY KEY,
+			blog_id INTEGER NOT NULL,
+			blog_slug VARCHAR(255),
+			author_name VARCHAR(255) NOT NULL,
+			author_email VARCHAR(255) NOT NULL,
+			content TEXT NOT NULL,
+			status VARCHAR(50) DEFAULT 'pending',
+			parent_id INTEGER REFERENCES comments(id) ON DELETE CASCADE,
+			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+	`
+
 	_, err := pool.Exec(context.Background(), createFormTableSQL)
 	if err != nil {
 		log.Fatalf("Failed to create forms table: %v", err)
@@ -215,5 +230,10 @@ func CreateTables(pool *pgxpool.Pool) {
 	_, err = pool.Exec(context.Background(), createBooksTableSQL)
 	if err != nil {
 		log.Fatalf("Failed to create books table: %v", err)
+	}
+
+	_, err = pool.Exec(context.Background(), createCommentsTableSQL)
+	if err != nil {
+		log.Fatalf("Failed to create comments table: %v", err)
 	}
 }
